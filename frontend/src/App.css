@@ -1,0 +1,155 @@
+/* Global app container */
+.app {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  text-align: center;
+  padding: 30px;
+  background: linear-gradient(135deg, #1db954, #191414);
+  min-height: 100vh;
+  color: #fff;
+  overflow: hidden;
+}
+
+
+@font-face {
+    font-family: "Steelfish";
+    src: url("../fonts/steelfish.outline-regular.otf");
+    font-weight: 800;
+}
+@font-face {
+    font-family: "Theater";
+    src: url("../fonts/Theater_Bold.otf");
+}
+
+/* Title & subtitle */
+.title {
+  font-family: "Theater";
+  color: #FFFF;
+  font-size: 100px;
+  transition: 0.2s;
+  margin-bottom: 0;
+  letter-spacing: 0.5px;
+}
+
+.title:hover {
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px #84f7ac;
+    transform: translateY(-4px);
+}
+
+.subtitle {
+  font-family: "Arial";
+  font-size: 1rem;
+  margin-bottom: 30px;
+  color: #FFF;
+  margin-top: 0;
+}
+
+/* Input field */
+.input {
+  padding: 12px;
+  width: 380px;
+  border: none;
+  border-radius: 25px;
+  margin-right: 10px;
+  font-size: 1rem;
+  outline: none;
+  transition: box-shadow 0.3s ease;
+}
+
+.input:focus {
+  /* box-shadow: 0 0 10px #1db954; */
+  box-shadow: 0 0 10px #84f7ac;
+}
+
+/* Button */
+.button {
+  padding: 12px 20px;
+  background: #1db954;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+  color: #fff;
+}
+
+.button:hover {
+  background: #1ed760;
+}
+
+.button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+.results {
+  margin-top: 40px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  border-radius: 15px;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.recommendations {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+  text-align: left;
+}
+
+/* Each recommendation card */
+.recommendation-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.recommendation-card:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Album cover image */
+.album-cover {
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+
+.album-cover:hover {
+  transform: scale(1.07);
+}  
+
+/* Artist name */
+.artist {
+  font-weight: bold;
+  color: #1db954;
+  margin: 5px 0;
+}
+
+/* Meta text */
+.meta {
+  font-size: 0.9rem;
+  color: #b3b3b3;
+}
+
+/* Spotify link */
+.spotify-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #1db954;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.spotify-link:hover {
+  text-decoration: underline;
+  transform: translateY(-4px);
+}
