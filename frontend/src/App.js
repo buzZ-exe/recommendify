@@ -18,7 +18,7 @@ function App() {
         const lon = position.coords.longitude;
 
         try {
-          const res = await fetch("http://localhost:8000/recommend", {
+          const res = await fetch("https://recommendify-zm37.onrender.com/recommend", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
