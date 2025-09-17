@@ -59,7 +59,7 @@ function App() {
 
       {/* Button */}
       <button className="button" onClick={getRecommendations} disabled={loading}>
-        {loading ? "Loading..." : "Get Recommendations"}
+        {loading ? "Loading..." : "Search"}
       </button>
 
       {/* Results */}
