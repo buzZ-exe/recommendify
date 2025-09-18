@@ -100,7 +100,7 @@ function App() {
                   <h3>{rec.name}</h3>
                   <p className="artist">{rec.artist}</p>
                   <p className="meta">
-                    {rec.genre} • Mood: {rec.mood}
+                    {rec.genre} • Mood: {rec.moods}
                   </p>
                   {rec.spotify_url && (
                     <a
