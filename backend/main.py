@@ -6,6 +6,11 @@ from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from datetime import datetime
+import asyncio
+import httpx
+from fastapi import Body
+import json
+import re
 
 # Load env vars
 load_dotenv()
@@ -29,6 +34,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 ))
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 def get_weather_and_time(lat: float, lon: float):
     url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric"
@@ -61,7 +67,7 @@ def get_weather_and_time(lat: float, lon: float):
 
 
 @app.post("/recommend")
-def recommend_music(payload: dict = Body(...)):
+async def recommend_music(payload: dict = Body(...)):
     """
     Expects payload:
     {
@@ -74,47 +80,56 @@ def recommend_music(payload: dict = Body(...)):
     lon = payload.get("lon")
     user_input = payload.get("user_input", "")
 
-    
+    # weather + time
     weather, time_of_day, local_time = get_weather_and_time(lat, lon)
 
-   
+    # prompt
     prompt = f"""
+    You do not remember past conversations.
     You are a smart music recommendation assistant. Suggest 10 songs for the user based on:
 
     Time of Day: {time_of_day}
     Weather: {weather['description']}
     User Input: {user_input if user_input else 'None'}
 
-    The sings should not be well known but also should not be unknown.
-    Do not be afraid to give obscure songs. If needed check rateyourmusic.com for good suggesstions.
-    For each song, provide: name, artist, genre, mood.
-    Format strictly as JSON array, no extra text.
+    The songs should not be well known but also should not be unknown.
+    Don't be afraid to give obscure songs.
+    Keep at least 3 popular at the top and at least 3 not well known but well rated songs as well. 
+    If needed check rateyourmusic.com for good suggestions.
+    For each song, provide: name, artist, genre, two moods in one string separated with comma.
+    Whatever the user inputs takes priority over the time and weather.
+    Format strictly as JSON array, no extra text, NO PREAMBLE AND NO TEXT AFTER.
     """
 
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-    }
+    # call OpenRouter (async)
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            # "model": "deepseek/deepseek-chat-v3.1:free",
+            "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.7
+        }
 
-    data = {
-        "model": "deepseek/deepseek-chat-v3.1:free",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.7
-    }
-
-    r = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
-    raw_text = r.json()["choices"][0]["message"]["content"]
+        # r = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+        r = await client.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=data)
+        raw_text = r.json()["choices"][0]["message"]["content"]
 
     try:
-        recommendations = eval(raw_text)  # parse JSON array
+        recommendations = json.loads(raw_text)  
     except Exception:
         recommendations = []
 
-    
-    enriched = []
-    for rec in recommendations:
-        query = f"{rec['name']} {rec['artist']}"
-        results = sp.search(q=query, limit=1, type="track")
+    async def enrich_song(rec):
+        loop = asyncio.get_event_loop()
+        def search():
+            query = f"{rec['name']} {rec['artist']}"
+            return sp.search(q=query, limit=1, type="track")
+
+        results = await loop.run_in_executor(None, search)
 
         if results["tracks"]["items"]:
             track = results["tracks"]["items"][0]
@@ -123,14 +138,16 @@ def recommend_music(payload: dict = Body(...)):
         else:
             rec["spotify_url"] = None
             rec["album_cover"] = None
+        return rec
 
-        enriched.append(rec)
+    
+    enriched = await asyncio.gather(*(enrich_song(rec) for rec in recommendations))
 
     return {
         "local_time": local_time,
         "time_of_day": time_of_day,
         "weather": weather,
-        "recommendations": enriched
+        "recommendations": enriched,
     }
 
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
